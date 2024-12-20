@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    height: 100vh;
+    width: auto;
+    overflow-x: hidden;
+}
+
+*:focus{
+    outline: none;
+}
+
+.bg-image{
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
