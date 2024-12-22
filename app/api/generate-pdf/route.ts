@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         const dateColumnWidth = (pageWidth - 2 * margin) / 4 - 5;
         const titleRowWidth = pageWidth - 2 * margin - dateColumnWidth;
         const midleRightBlock = margin + dateColumnWidth + 5 + titleRowWidth / 2;
+        const domain = "https://tempestra-pdf.vercel.app"
 
         pdf.setFontSize(32);
         pdf.text("Weather Forecast", midleRightBlock, 19, {align: "center"});
@@ -107,14 +108,14 @@ export async function GET(request: NextRequest) {
                 pdf.line(margin + 3, yPosition + 5, margin + dateColumnWidth - 3, yPosition + 5);
                 pdf.line(margin + dateColumnWidth + 5 + 3, yPosition + 5, margin + dateColumnWidth + 5 + titleRowWidth - 3, yPosition + 5);
                 try {
-                    const morningImage = convertImageToBase64(`/${codeToImage(morningCode)}`);
+                    const morningImage = convertImageToBase64(`${domain}/${codeToImage(morningCode)}`);
                     pdf.addImage(morningImage, "PNG", margin + dateColumnWidth + 5 + 2 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 }
                 catch (error) {
                     console.error("Erreur lors de l'ajout de l'image matin :", error);
                 }
                 try {
-                    const afternoonImage = convertImageToBase64(`/${codeToImage(afternoonCode)}`);
+                    const afternoonImage = convertImageToBase64(`${domain}/${codeToImage(afternoonCode)}`);
                     pdf.addImage(afternoonImage, "PNG", margin + dateColumnWidth + 5 + 6 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 } catch (error) {
                     console.error("Erreur lors de l'ajout de l'image après-midi :", error);
