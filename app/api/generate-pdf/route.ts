@@ -107,14 +107,14 @@ export async function GET(request: NextRequest) {
                 pdf.line(margin + 3, yPosition + 5, margin + dateColumnWidth - 3, yPosition + 5);
                 pdf.line(margin + dateColumnWidth + 5 + 3, yPosition + 5, margin + dateColumnWidth + 5 + titleRowWidth - 3, yPosition + 5);
                 try {
-                    const morningImage = convertImageToBase64(`public/${codeToImage(morningCode)}`);
+                    const morningImage = convertImageToBase64(`/${codeToImage(morningCode)}`);
                     pdf.addImage(morningImage, "PNG", margin + dateColumnWidth + 5 + 2 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 }
                 catch (error) {
                     console.error("Erreur lors de l'ajout de l'image matin :", error);
                 }
                 try {
-                    const afternoonImage = convertImageToBase64(`public/${codeToImage(afternoonCode)}`);
+                    const afternoonImage = convertImageToBase64(`/${codeToImage(afternoonCode)}`);
                     pdf.addImage(afternoonImage, "PNG", margin + dateColumnWidth + 5 + 6 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 } catch (error) {
                     console.error("Erreur lors de l'ajout de l'image après-midi :", error);
