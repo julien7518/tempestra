@@ -3,16 +3,18 @@
 @tailwind utilities;
 
 body {
-    height: 100vh;
-    width: auto;
+    height: auto;
+    width: 100vw;
     overflow-x: hidden;
+    /*background-image: linear-gradient(to bottom, rgb(229, 229, 229), white);*/
+    /*background-repeat: no-repeat;*/
 }
 
-*:focus{
+*:focus {
     outline: none;
 }
 
-.bg-image{
+.bg-image {
     background-repeat: no-repeat;
     background-position: 50%;
 }

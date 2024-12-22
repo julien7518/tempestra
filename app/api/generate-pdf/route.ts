@@ -1,16 +1,56 @@
 import {jsPDF} from 'jspdf';
 import {NextRequest, NextResponse} from "next/server";
+import {readFileSync} from "fs";
 
 export function pdfName() {
     const today = new Date();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const date = today.getDate();
+    const month: number = today.getMonth() + 1;
+    const year: number = today.getFullYear();
+    const date: number = today.getDate();
     return `meteo-${date}-${month}-${year}.pdf`;
 }
 
+function formatDate(dateString: string) {
+    const date = new Date(dateString);
+
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const dayShort = days[date.getUTCDay()];
+    const dayOfMonth = date.getUTCDate();
+
+    return `${dayShort} ${dayOfMonth}`;
+}
+
+function cToF(t: number) {
+    return Math.round(t * 9 / 5 + 32);
+}
+
+function codeToImage(code: number) {
+    if (code >= 0 && code <= 2) {
+        return "sunny.png";
+    } else if (code >= 3 && code <= 7) {
+        return "cloudy.png";
+    } else if ((code >= 10 && code <= 16) || (code >= 70 && code <= 78) || (code >= 30 && code <= 48) || (code >= 210 && code <= 212) || (code >= 230 && code <= 232)) {
+        return "rainy.png";
+    } else if ((code >= 20 && code <= 22) || (code >= 60 && code <= 68) || (code >= 220 && code <= 222) || (code === 235)) {
+        return "snowy.png";
+    } else if (code >= 100 && code <= 142) {
+        return "stormy.png";
+    } else {
+        throw new Error("Code inconnu");
+    }
+}
+
+function convertImageToBase64(imagePath: string) {
+    try {
+        const file = readFileSync(imagePath);
+        return `data:image/png;base64,${file.toString("base64")}`;
+    } catch (error) {
+        throw new Error(`Image non trouvée : ${error}`);
+    }
+}
+
 async function fetchWeatherData() {
-    const apiKey = "";
+    const apiKey = "036d9564a550f68c54d450fa74a501bd3631748a3cfdc6c4c547e38f4504b062";
     const endpoint = `https://api.meteo-concept.com/api/forecast/daily/periods?token=${apiKey}&insee=75056`;
 
     const response = await fetch(endpoint);
@@ -25,7 +65,7 @@ export async function GET(request: NextRequest) {
     try {
         const orientation: "p" | "l" =
             request.nextUrl.searchParams.get("orientation") === "l" ? "l" : "p";
-        // const weatherData = await fetchWeatherData();
+        const weatherData = await fetchWeatherData();
         const pdf = new jsPDF({
             orientation: orientation,
             unit: "mm",
@@ -34,22 +74,55 @@ export async function GET(request: NextRequest) {
 
         const pageWidth = 210;
         const margin = 10;
-        const dateColumnWidth = (pageWidth - 2 * margin)/4;
+        const dateColumnWidth = (pageWidth - 2 * margin) / 4 - 5;
         const titleRowWidth = pageWidth - 2 * margin - dateColumnWidth;
-        const midleRightBlock = margin + dateColumnWidth + titleRowWidth/2;
+        const midleRightBlock = margin + dateColumnWidth + 5 + titleRowWidth / 2;
 
         pdf.setFontSize(32);
-        pdf.text("Weather Forecast", pageWidth / 2, 19, {align: "center"});
+        pdf.text("Weather Forecast", midleRightBlock, 19, {align: "center"});
         pdf.setFontSize(14);
         pdf.setDrawColor(255, 255, 255);
-        pdf.setFillColor(229, 229, 229);
-        pdf.roundedRect(margin + dateColumnWidth, 30, titleRowWidth, 15, 5, 5, 'F');
-        pdf.roundedRect(margin, 50, dateColumnWidth - 5, 200, 5, 5, 'F');
-        pdf.roundedRect(margin + dateColumnWidth, 50, titleRowWidth, 200, 5, 5, 'F');
+        pdf.setFillColor(243, 243, 243);
+        pdf.roundedRect(margin + dateColumnWidth + 5, 30, titleRowWidth, 15, 5, 5, 'F');
+        pdf.roundedRect(margin, 50, dateColumnWidth, 197, 5, 5, 'F');
+        pdf.roundedRect(margin + dateColumnWidth + 5, 50, titleRowWidth, 197, 5, 5, 'F');
         pdf.line(midleRightBlock, 33, midleRightBlock, 42);
-        pdf.line(midleRightBlock, 55, midleRightBlock, 245);
-        pdf.text("Morning", margin + dateColumnWidth + titleRowWidth/4, 39, {align: "center"});
-        pdf.text("Afternoon", margin + dateColumnWidth + 3*titleRowWidth/4, 39, {align: "center"});
+        pdf.line(midleRightBlock, 55, midleRightBlock, 242);
+        pdf.text("Morning", margin + dateColumnWidth + 5 + titleRowWidth / 4, 39, {align: "center"});
+        pdf.text("Afternoon", margin + dateColumnWidth + 5 + 3 * titleRowWidth / 4, 39, {align: "center"});
+
+        for (let i = 0; i < 14; i++) {
+            const yPosition = 60 + i * 14;
+            try {
+                const day = formatDate(weatherData['forecast'][i][0]['datetime']);
+                const celciusMorning: number = weatherData['forecast'][i][1]['temp2m'];
+                const celciusAfternoon: number = weatherData['forecast'][i][2]['temp2m'];
+                const morningCode: number = weatherData['forecast'][i][1]['weather'];
+                const afternoonCode: number = weatherData['forecast'][i][2]['weather'];
+                pdf.text(day, margin + dateColumnWidth / 2, yPosition, {align: "center"});
+                pdf.text(`${celciusMorning}°C`, margin + dateColumnWidth + 5 + titleRowWidth / 8 - 5, yPosition, {align: "center"});
+                pdf.text(`${cToF(celciusMorning)}°F`, margin + dateColumnWidth + 5 + 3 * titleRowWidth / 8 + 5, yPosition, {align: "center"});
+                pdf.text(`${celciusAfternoon}°C`, margin + dateColumnWidth + 5 + 5 * titleRowWidth / 8 - 5, yPosition, {align: "center"});
+                pdf.text(`${cToF(celciusAfternoon)}°F`, margin + dateColumnWidth + 5 + 7 * titleRowWidth / 8 + 5, yPosition, {align: "center"});
+                pdf.line(margin + 3, yPosition + 5, margin + dateColumnWidth - 3, yPosition + 5);
+                pdf.line(margin + dateColumnWidth + 5 + 3, yPosition + 5, margin + dateColumnWidth + 5 + titleRowWidth - 3, yPosition + 5);
+                try {
+                    const morningImage = convertImageToBase64(`public/${codeToImage(morningCode)}`);
+                    pdf.addImage(morningImage, "PNG", margin + dateColumnWidth + 5 + 2 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
+                }
+                catch (error) {
+                    console.error("Erreur lors de l'ajout de l'image matin :", error);
+                }
+                try {
+                    const afternoonImage = convertImageToBase64(`public/${codeToImage(afternoonCode)}`);
+                    pdf.addImage(afternoonImage, "PNG", margin + dateColumnWidth + 5 + 6 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
+                } catch (error) {
+                    console.error("Erreur lors de l'ajout de l'image après-midi :", error);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la mise en page :", error);
+            }
+        }
 
         pdf.setProperties({
             title: `Today's weather`,
@@ -60,15 +133,14 @@ export async function GET(request: NextRequest) {
         });
 
         const pdfData = pdf.output("arraybuffer");
-        const fileName = `${pdfName()}.pdf`;
         return new NextResponse(Buffer.from(pdfData), {
             headers: {
                 "Content-Type": "application/pdf",
-                "Content-Disposition": `attachment; filename="${fileName}"; filename*=UTF-8''${fileName}`,
+                "Content-Disposition": `attachment; filename="${pdfName()}"; filename*=UTF-8''${pdfName()}`,
             },
         });
     } catch (error) {
         console.error("Erreur lors de la génération du PDF :", error);
-        return new NextResponse("Erreur interne du serveur !", {status: 500});
+        return new NextResponse(`Erreur interne du serveur ! ${error}`, {status: 500});
     }
 }

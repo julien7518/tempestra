@@ -1,12 +1,18 @@
 "use client";
-import {useState} from "react";
+import {ReactNode, useState} from "react";
 import {pdfName} from "@/app/api/generate-pdf/route";
 
-function Button({label, func}: { label: string; func: () => void }) {
+function Button({label, func, disabled = false}: {
+    label: ReactNode;
+    func: (() => void) | undefined;
+    disabled?: boolean;
+}) {
     return (
         <>
-            <button className="bg-neutral-200 font-medium rounded-3xl w-52 h-16 m-2.5 text-2xl active:bg-neutral-300"
-                    onClick={func}>
+            <button
+                className={`bg-neutral-200 font-medium rounded-3xl w-52 h-16 m-2.5 text-2xl active:bg-neutral-300 ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"}`}
+                onClick={disabled ? undefined : func}
+                disabled={disabled}>
                 {label}
             </button>
         </>
@@ -19,7 +25,7 @@ function PDFViewer({sourcename = undefined}: { sourcename?: string | undefined }
     }
 
     return (
-        <div className="hidden lg:flex justify-center h-full mt-10">
+        <div className="hidden md:flex justify-center h-full mt-10">
             <iframe src={sourcename} className="w-3/5 h-96"/>
         </div>
     );
@@ -63,7 +69,7 @@ export default function Home() {
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
 
-            if (window.innerWidth < 1024) {
+            if (window.innerWidth < 768) {
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = pdfName();
@@ -82,7 +88,7 @@ export default function Home() {
     return (
         <>
             <div className="flex items-top justify-center h-16 mx-2.5">
-                <p className="text-center text-2xl">
+                <p className="text-center text-xl md:text-2xl">
                     Create your weather forecast in the format you want
                 </p>
             </div>
@@ -91,7 +97,15 @@ export default function Home() {
                     <ToggleButton label="Portrait" id="p"/>
                     <ToggleButton label="Landscape" id="l" rotate={true}/>
                 </div>
-                <Button label="Create" func={() => handleGeneratePDF(activeOrientation)}/>
+                <Button label={
+                    <>
+                        <span className="hidden md:inline">Create</span>
+                        <span className="md:hidden">Download</span>
+                    </>
+                } func={() => handleGeneratePDF(activeOrientation)} disabled={activeOrientation === "l"}/>
+                <div className="block h-6 items-center text-red-600 font-medium text-center mt-2">
+                    {activeOrientation === "l" && "Not available yet"}
+                </div>
             </div>
             <PDFViewer sourcename={pdfLink}/>
         </>
