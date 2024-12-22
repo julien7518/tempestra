@@ -1,14 +1,7 @@
 import {jsPDF} from 'jspdf';
 import {NextRequest, NextResponse} from "next/server";
 import {readFileSync} from "fs";
-
-export function pdfName() {
-    const today = new Date();
-    const month: number = today.getMonth() + 1;
-    const year: number = today.getFullYear();
-    const date: number = today.getDate();
-    return `meteo-${date}-${month}-${year}.pdf`;
-}
+import { pdfName } from '@/app/page';
 
 function formatDate(dateString: string) {
     const date = new Date(dateString);

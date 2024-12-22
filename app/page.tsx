@@ -1,6 +1,5 @@
 "use client";
 import {ReactNode, useState} from "react";
-import {pdfName} from "@/app/api/generate-pdf/route";
 
 function Button({label, func, disabled = false}: {
     label: ReactNode;
@@ -17,6 +16,14 @@ function Button({label, func, disabled = false}: {
             </button>
         </>
     );
+}
+
+export function pdfName() {
+    const today = new Date();
+    const month: number = today.getMonth() + 1;
+    const year: number = today.getFullYear();
+    const date: number = today.getDate();
+    return `meteo-${date}-${month}-${year}.pdf`;
 }
 
 function PDFViewer({sourcename = undefined}: { sourcename?: string | undefined }) {
