@@ -18,7 +18,7 @@ function Button({label, func, disabled = false}: {
     );
 }
 
-export function pdfName() {
+function pdfName() {
     const today = new Date();
     const month: number = today.getMonth() + 1;
     const year: number = today.getFullYear();
