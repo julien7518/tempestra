@@ -37,8 +37,8 @@ export const metadata: Metadata = {
             {
                 url: "https://tempestra-pdf.vercel.app/apple-icon.png",
                 alt: "Tempestra - Weather Forecast PDF Generator",
-                width: 1200,
-                height: 630,
+                width: 150,
+                height: 79,
             }
         ],
         locale: "en_US",
