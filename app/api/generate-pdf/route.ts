@@ -1,6 +1,5 @@
 import {jsPDF} from 'jspdf';
 import {NextRequest, NextResponse} from "next/server";
-import {readFileSync} from "fs";
 
 function pdfName() {
     const today = new Date();
@@ -40,12 +39,17 @@ function codeToImage(code: number) {
     }
 }
 
-function convertImageToBase64(imagePath: string) {
+async function convertImageToBase64(imageUrl: string) {
     try {
-        const file = readFileSync(imagePath);
-        return `data:image/png;base64,${file.toString("base64")}`;
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+             console.error(`Image introuvable : ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString("base64");
+        return `data:image/png;base64,${base64}`;
     } catch (error) {
-        throw new Error(`Image non trouvée : ${error}`);
+        throw new Error(`Erreur lors de la conversion de l'image en base64 : ${error}`);
     }
 }
 
@@ -108,14 +112,14 @@ export async function GET(request: NextRequest) {
                 pdf.line(margin + 3, yPosition + 5, margin + dateColumnWidth - 3, yPosition + 5);
                 pdf.line(margin + dateColumnWidth + 5 + 3, yPosition + 5, margin + dateColumnWidth + 5 + titleRowWidth - 3, yPosition + 5);
                 try {
-                    const morningImage = convertImageToBase64(`${domain}/${codeToImage(morningCode)}`);
+                    const morningImage = await convertImageToBase64(`${domain}/${codeToImage(morningCode)}`);
                     pdf.addImage(morningImage, "PNG", margin + dateColumnWidth + 5 + 2 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 }
                 catch (error) {
                     console.error("Erreur lors de l'ajout de l'image matin :", error);
                 }
                 try {
-                    const afternoonImage = convertImageToBase64(`${domain}/${codeToImage(afternoonCode)}`);
+                    const afternoonImage = await convertImageToBase64(`${domain}/${codeToImage(afternoonCode)}`);
                     pdf.addImage(afternoonImage, "PNG", margin + dateColumnWidth + 5 + 6 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
                 } catch (error) {
                     console.error("Erreur lors de l'ajout de l'image après-midi :", error);
