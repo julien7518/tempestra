@@ -10,15 +10,54 @@ import {SpeedInsights} from "@vercel/speed-insights/next"
 const inter = Inter({subsets: ["latin"]});
 
 export const metadata: Metadata = {
-    title: "Tempestra",
-    description: "Tempestra is the app which helps you to generate weather forecast",
+    title: "Tempestra - Weather Forecast PDF Generator",
+    description: "Tempestra is an intuitive and powerful weather forecast application designed to generate high-quality, customizable PDFs. From accurate weather data to personalized styles, it helps you stay informed and prepared.",
+    keywords: "weather, forecast, meteo, PDF generator, Tempestra, weather app, weather PDF, download weather, forecast app, météo, weather report, jsPDF",
+    authors: [{name: "Julien7518", url: "https://github.com/julien7518"}],
+    creator: "Julien7518",
+    publisher: "Tempestra",
+    applicationName: "Tempestra - Your Weather PDF Assistant",
+    category: "Web Application, Weather Forecasting, Productivity",
+    icons: {
+        icon: "/favicon.ico",
+        apple: "/apple-icon.png",
+    },
+    robots: {
+        index: true,
+        follow: true,
+        nocache: false,
+    },
+    openGraph: {
+        type: "website",
+        url: "https://tempestra-pdf.vercel.app",
+        title: "Tempestra - Generate Weather Forecast PDFs",
+        description: "Create stunning and accurate weather forecast PDFs easily with Tempestra. Select orientations, preview reports, and download directly.",
+        siteName: "Tempestra",
+        images: [
+            {
+                url: "https://tempestra-pdf.vercel.app/apple-icon.png",
+                alt: "Tempestra - Weather Forecast PDF Generator",
+                width: 1200,
+                height: 630,
+            }
+        ],
+        locale: "en_US",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Tempestra - Weather Forecast PDF Generator",
+        description: "Generate accurate, customizable weather forecast PDFs for personal or professional use with Tempestra.",
+        creator: "@julien7518",
+        site: "@tempestrapdf",
+        images: ["https://tempestra-pdf.vercel.app/apple-icon.png"],
+    }
 };
 
 export default function RootLayout({children}: Readonly<{ children: React.ReactNode; }>) {
     return (
         <html lang="en">
-        <Analytics />
-        <SpeedInsights />
+        <Analytics/>
+        <SpeedInsights/>
         <body className={inter.className}>
         <header>
             <div
