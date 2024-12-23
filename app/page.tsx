@@ -1,17 +1,14 @@
 "use client";
 import {ReactNode, useState} from "react";
 
-function Button({label, func, disabled = false}: {
+function Button({label, func}: {
     label: ReactNode;
     func: (() => void) | undefined;
-    disabled?: boolean;
 }) {
     return (
         <>
-            <button
-                className={`bg-neutral-200 font-medium rounded-3xl w-52 h-16 m-2.5 text-2xl active:bg-neutral-300 ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"}`}
-                onClick={disabled ? undefined : func}
-                disabled={disabled}>
+            <button className="bg-neutral-200 font-medium rounded-3xl w-52 h-16 m-2.5 text-2xl active:bg-neutral-300"
+                    onClick={func}>
                 {label}
             </button>
         </>
@@ -109,10 +106,7 @@ export default function Home() {
                         <span className="hidden md:inline">Create</span>
                         <span className="md:hidden">Download</span>
                     </>
-                } func={() => handleGeneratePDF(activeOrientation)} disabled={activeOrientation === "l"}/>
-                <div className="block h-6 items-center text-red-600 font-medium text-center mt-2">
-                    {activeOrientation === "l" && "Not available yet"}
-                </div>
+                } func={() => handleGeneratePDF(activeOrientation)}/>
             </div>
             <PDFViewer sourcename={pdfLink}/>
         </>

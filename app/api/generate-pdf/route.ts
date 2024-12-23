@@ -9,14 +9,25 @@ function pdfName() {
     return `meteo-${date}-${month}-${year}.pdf`;
 }
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string, extended: boolean = false) {
     const date = new Date(dateString);
 
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const dayShort = days[date.getUTCDay()];
+    const days = ["Sunday", "Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const day = days[date.getUTCDay()];
     const dayOfMonth = date.getUTCDate();
-
-    return `${dayShort} ${dayOfMonth}`;
+    const month = months[date.getUTCMonth()];
+    const suffix =
+        dayOfMonth === 11 || dayOfMonth === 12 || dayOfMonth === 13
+            ? "th"
+            : dayOfMonth % 10 === 1
+                ? "st"
+                : dayOfMonth % 10 === 2
+                    ? "nd"
+                    : dayOfMonth % 10 === 3
+                        ? "rd"
+                        : "th";
+    return extended ? `${day}, ${month} ${dayOfMonth}${suffix}` : `${day.substring(0, 3)} ${dayOfMonth}${suffix} ${month.substring(0, 3)}`;
 }
 
 function cToF(t: number) {
@@ -43,7 +54,7 @@ async function convertImageToBase64(imageUrl: string) {
     try {
         const response = await fetch(imageUrl);
         if (!response.ok) {
-             console.error(`Image introuvable : ${response.statusText}`);
+            console.error(`Image introuvable : ${response.statusText}`);
         }
         const arrayBuffer = await response.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString("base64");
@@ -75,31 +86,35 @@ export async function GET(request: NextRequest) {
             unit: "mm",
             format: "a4",
         });
-
-        const pageWidth = 210;
+        const isPortrait = orientation === "p";
+        const pageWidth = isPortrait ? 210 : 297;
+        const middleBlockHeight = isPortrait ? 197 : 127;
+        const maxDays = isPortrait ? 14 : 9;
+        const domain = "https://tempestra-pdf.vercel.app";
         const margin = 10;
         const dateColumnWidth = (pageWidth - 2 * margin) / 4 - 5;
-        const titleRowWidth = pageWidth - 2 * margin - dateColumnWidth;
+        const titleRowWidth = pageWidth - 2 * margin - dateColumnWidth - 5;
         const midleRightBlock = margin + dateColumnWidth + 5 + titleRowWidth / 2;
-        const domain = "https://tempestra-pdf.vercel.app"
 
         pdf.setFontSize(32);
-        pdf.text("Weather Forecast", midleRightBlock, 19, {align: "center"});
+        pdf.setFillColor(243, 243, 243);
+        pdf.roundedRect(margin, margin, pageWidth - 2 * margin, 15, 5, 5, 'F');
+        pdf.text("Weather Forecast", pageWidth / 2, 21, {align: "center"});
         pdf.setFontSize(14);
         pdf.setDrawColor(255, 255, 255);
-        pdf.setFillColor(243, 243, 243);
+        pdf.setFillColor(247, 247, 247);
         pdf.roundedRect(margin + dateColumnWidth + 5, 30, titleRowWidth, 15, 5, 5, 'F');
-        pdf.roundedRect(margin, 50, dateColumnWidth, 197, 5, 5, 'F');
-        pdf.roundedRect(margin + dateColumnWidth + 5, 50, titleRowWidth, 197, 5, 5, 'F');
+        pdf.roundedRect(margin, 50, dateColumnWidth, middleBlockHeight, 5, 5, 'F');
+        pdf.roundedRect(margin + dateColumnWidth + 5, 50, titleRowWidth, middleBlockHeight, 5, 5, 'F');
         pdf.line(midleRightBlock, 33, midleRightBlock, 42);
-        pdf.line(midleRightBlock, 55, midleRightBlock, 242);
+        pdf.line(midleRightBlock, 55, midleRightBlock, middleBlockHeight + 45);
         pdf.text("Morning", margin + dateColumnWidth + 5 + titleRowWidth / 4, 39, {align: "center"});
         pdf.text("Afternoon", margin + dateColumnWidth + 5 + 3 * titleRowWidth / 4, 39, {align: "center"});
 
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < maxDays; i++) {
             const yPosition = 60 + i * 14;
             try {
-                const day = formatDate(weatherData['forecast'][i][0]['datetime']);
+                const day = formatDate(weatherData['forecast'][i][0]['datetime'], !isPortrait);
                 const celciusMorning: number = weatherData['forecast'][i][1]['temp2m'];
                 const celciusAfternoon: number = weatherData['forecast'][i][2]['temp2m'];
                 const morningCode: number = weatherData['forecast'][i][1]['weather'];
@@ -114,8 +129,7 @@ export async function GET(request: NextRequest) {
                 try {
                     const morningImage = await convertImageToBase64(`${domain}/${codeToImage(morningCode)}`);
                     pdf.addImage(morningImage, "PNG", margin + dateColumnWidth + 5 + 2 * titleRowWidth / 8 - 5, yPosition - 7, 10, 10);
-                }
-                catch (error) {
+                } catch (error) {
                     console.error("Erreur lors de l'ajout de l'image matin :", error);
                 }
                 try {
